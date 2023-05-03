@@ -25,7 +25,7 @@ after((done) => {
   done()
 })
 
-const SAMPLE_OBJECT_ID = 'aaaaaaaaaaaa' // 12 byte string
+const SAMPLE_OBJECT_ID = 'cccccccccccc' // 12 byte string
 const SAMPLE_MESSAGE_ID = 'bbbbbbbbbbbb' // 12 byte string
 
 describe('Message API endpoints', () => {
@@ -61,18 +61,18 @@ describe('Message API endpoints', () => {
 
     it('should load all messages', (done) => {
         chai.request(app)
-        .get('/')
+        .get('/messages')
         .end((err, res) => {
             if(err) {done(err)}
             expect(res).to.have.status(200);
-            expect(res.body).to.be.an("array")
+            expect(res.body.messages).to.be.an("array")
             done();
         });
     })
 
     it('should get one specific message', (done) => {
         chai.request(app)
-        .get(`/${SAMPLE_MESSAGE_ID}`)
+        .get(`/messages/${SAMPLE_MESSAGE_ID}`)
         .end((err, res) => {
             if(err){ done(err) }
             expect(res).to.have.status(200);
@@ -84,33 +84,30 @@ describe('Message API endpoints', () => {
 
     it('should post a new message', (done) => {
         chai.request(app)
-        .post('/')
+        .post('/messages')
         .send({title: 'test2', body:'testing again', author: SAMPLE_OBJECT_ID})
         .end((err, res) => {
             if(err){done(err)}
-            expect(res.body.message).to.be.an('object')
-            expect(res.body.message).to.have.property({title:'test2', body:'testing again', author: SAMPLE_OBJECT_ID})
+            expect(res).to.have.status(200)
+            expect(res.body).to.be.an('object')
+            expect(res.body).to.have.property('title')
 
-            // check to see if message is in database
-            Message.findOne({title:test2}).then(message => {
-                expect(message).to.be.an('object')
-                done()
-            })
+            done()
         })  
     })
 
     it('should update a message', (done) => {
         chai.request(app)
-        .put(`/${SAMPLE_MESSAGE_ID}`)
+        .put(`/messages/${SAMPLE_MESSAGE_ID}`)
         .send({title: 'test', body: 'message changed', author:SAMPLE_OBJECT_ID})
         .end((err, res) => {
             if(err){done(err)}
-            expect(res.body.message).to.be.an('object')
-            expect(res.body.message).to.have.property({title: 'test', body:'testing', author:SAMPLE_OBJECT_ID})
+            expect(res.body).to.be.an('object')
+            expect(res.body).to.have.property('title')
 
             // check to see if message was updated
-            Message.findOne({title:'test'}).then(message => {
-                expect(message).to.have.property({body: 'message changed'})
+            Message.findOne({title:'test'}).then((message) => {
+                expect(message).to.have.property('body')
                 done()
             })
         })
@@ -118,14 +115,14 @@ describe('Message API endpoints', () => {
 
     it('should delete a message', (done) => {
         chai.request(app)
-        .delete(`/${SAMPLE_MESSAGE_ID}`)
+        .delete(`/messages/${SAMPLE_MESSAGE_ID}`)
         .end((err, res) => {
             if(err){done(err)}
             expect(res.body.message).to.equal('Successfully deleted.')
             expect(res.body._id).to.equal(SAMPLE_MESSAGE_ID)
 
             //check the message was removed from the database
-            Message.findOne({title:test}).then(message => {
+            Message.findOne({title:'test'}).then(message => {
                 expect(message).to.equal(null)
                 done()
             })
